@@ -90,6 +90,21 @@ export class TelegramBridge {
 
     async _handleMessage(ctx) {
         const settings = await this.getSettings();
+        // Cache Channel Info (Discovery)
+        if (ctx.chat && (ctx.chat.type === 'channel' || ctx.chat.type === 'supergroup')) {
+            this.recentChannels.set(String(ctx.chat.id), {
+                id: String(ctx.chat.id),
+                name: ctx.chat.title || 'Unknown Channel',
+                username: ctx.chat.username,
+                lastSeen: Date.now()
+            });
+            // Keep size limited
+            if (this.recentChannels.size > 20) {
+                const firstKey = this.recentChannels.keys().next().value;
+                this.recentChannels.delete(firstKey);
+            }
+        }
+
         const _isValidSource = async (chat) => {
             // Allow if no channels configured (open mode) ?? No, secure by default.
             const currentSettings = await this.getSettings(); // Use this.getSettings()

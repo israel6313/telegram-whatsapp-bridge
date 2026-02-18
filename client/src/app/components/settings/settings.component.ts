@@ -4,13 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { SettingsService, BridgeSettings } from '../../services/settings.service';
 import { ToastService } from '../../services/toast.service';
 import { ConfirmService } from '../../services/confirm.service';
+import { SelectionDialogComponent, SelectionItem } from '../selection-dialog/selection-dialog.component';
 
 interface ChannelItem { id: string; name: string; }
 
 @Component({
     selector: 'app-settings',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, SelectionDialogComponent],
     templateUrl: './settings.component.html',
     styleUrl: './settings.component.scss',
 })
@@ -34,12 +35,19 @@ export class SettingsComponent implements OnInit {
     channels = signal<ChannelItem[]>([]);
     groups = signal<ChannelItem[]>([]);
 
+    // ---- Selection Dialog State ----
+    showSelection = signal(false);
+    selectionTitle = signal('');
+    selectionItems = signal<SelectionItem[]>([]);
+    selectionLoading = signal(false);
+    selectionEmptyText = signal('');
+    currentSelectionType = signal<'channel' | 'group' | null>(null);
+
     async ngOnInit() {
         try {
             const data = await this.settingsService.load();
             this.form.set({ ...data });
 
-            // Load directly from arrays if available, otherwise fall back to legacy strings
             if (data.channels && data.channels.length > 0) {
                 this.channels.set(data.channels);
             } else if (data.telegramChannelId) {
@@ -56,11 +64,76 @@ export class SettingsComponent implements OnInit {
         } catch { /* server may not be running */ }
     }
 
-    // ---- Channel CRUD ----
+    // ---- Discovery Actions ----
+    async openChannelDiscovery() {
+        this.currentSelectionType.set('channel');
+        this.selectionTitle.set('בחר ערוץ Telegram (פעילים לאחרונה)');
+        this.selectionEmptyText.set('רק ערוצים שהבוט ראה בהם הודעה לאחרונה יופיעו כאן. שלח הודעה בערוץ ונסה שוב.');
+        this.showSelection.set(true);
+        this.selectionLoading.set(true);
+        this.selectionItems.set([]);
+
+        try {
+            const recents = await this.settingsService.getRecentTelegramChannels();
+            this.selectionItems.set(recents.map(c => ({
+                id: c.id,
+                name: c.name,
+                subtext: c.username ? `@${c.username}` : undefined
+            })));
+        } catch (err) {
+            this.toast.error('שגיאה בטעינת ערוצים');
+        } finally {
+            this.selectionLoading.set(false);
+        }
+    }
+
+    async openGroupDiscovery() {
+        this.currentSelectionType.set('group');
+        this.selectionTitle.set('בחר קבוצת WhatsApp');
+        this.selectionEmptyText.set('לא נמצאו קבוצות. וודא ש-WhatsApp מחובר.');
+        this.showSelection.set(true);
+        this.selectionLoading.set(true);
+        this.selectionItems.set([]);
+
+        try {
+            const groups = await this.settingsService.getWhatsAppGroups();
+            this.selectionItems.set(groups.map(g => ({
+                id: g.id,
+                name: g.name
+            })));
+        } catch (err) {
+            this.toast.error('שגיאה בטעינת קבוצות');
+        } finally {
+            this.selectionLoading.set(false);
+        }
+    }
+
+    onSelection(item: SelectionItem) {
+        const type = this.currentSelectionType();
+        if (type === 'channel') {
+            // Check duplicate
+            if (this.channels().some(c => c.id === item.id)) {
+                this.toast.warning('הערוץ כבר קיים ברשימה');
+                return;
+            }
+            this.channels.update(c => [...c, { id: item.id, name: item.name }]);
+            this.toast.success(`נוסף ערוץ: ${item.name}`);
+        } else if (type === 'group') {
+            if (this.groups().some(g => g.id === item.id)) {
+                this.toast.warning('הקבוצה כבר קיימת ברשימה');
+                return;
+            }
+            this.groups.update(g => [...g, { id: item.id, name: item.name }]);
+            this.toast.success(`נוספה קבוצה: ${item.name}`);
+        }
+        this.showSelection.set(false);
+    }
+
+    // ---- CRUD (Existing) ----
     addChannel() {
         this.channels.update(c => [...c, { id: '', name: '' }]);
     }
-
+    // ... rest of CRUD methods ...
     removeChannel(index: number) {
         this.channels.update(c => c.filter((_, i) => i !== index));
     }

@@ -28,13 +28,17 @@
             <div class="section-header">
                 <span class="section-icon tg">📢</span>
                 <h3>ערוצי Telegram</h3>
-                <button class="btn btn-primary btn-sm" (click)="addChannel()">+ הוסף ערוץ</button>
+                <button class="btn btn-primary btn-sm" (click)="addChannel()">+ הוסף ידנית</button>
+                <button class="btn btn-ghost btn-sm" (click)="openChannelDiscovery()">🔍 מצא ערוצים</button>
             </div>
             <div class="section-body">
                 @if (channels().length === 0) {
                 <div class="empty-list">
                     <p>לא הוספו ערוצים עדיין</p>
-                    <button class="btn btn-ghost" (click)="addChannel()">+ הוסף ערוץ ראשון</button>
+                    <div class="buttons-row">
+                        <button class="btn btn-ghost" (click)="addChannel()">+ הוסף ידנית</button>
+                        <button class="btn btn-ghost" (click)="openChannelDiscovery()">🔍 מצא ערוצים פעילים</button>
+                    </div>
                 </div>
                 }
                 @for (ch of channels(); track $index; let i = $index) {
@@ -56,13 +60,17 @@
             <div class="section-header">
                 <span class="section-icon wa">📱</span>
                 <h3>קבוצות WhatsApp</h3>
-                <button class="btn btn-primary btn-sm" (click)="addGroup()">+ הוסף קבוצה</button>
+                <button class="btn btn-primary btn-sm" (click)="addGroup()">+ הוסף ידנית</button>
+                <button class="btn btn-ghost btn-sm" (click)="openGroupDiscovery()">🔍 מצא קבוצות</button>
             </div>
             <div class="section-body">
                 @if (groups().length === 0) {
                 <div class="empty-list">
                     <p>לא הוספו קבוצות עדיין</p>
-                    <button class="btn btn-ghost" (click)="addGroup()">+ הוסף קבוצה ראשונה</button>
+                    <div class="buttons-row">
+                        <button class="btn btn-ghost" (click)="addGroup()">+ הוסף ידנית</button>
+                        <button class="btn btn-ghost" (click)="openGroupDiscovery()">🔍 מצא קבוצות מהחשבון</button>
+                    </div>
                 </div>
                 }
                 @for (gr of groups(); track $index; let i = $index) {
@@ -130,4 +138,10 @@
             {{ settingsService.loading() ? '⏳ שומר...' : '💾 שמור הגדרות' }}
         </button>
     </div>
+
+    @if (showSelection()) {
+    <app-selection-dialog [title]="selectionTitle()" [items]="selectionItems()" [loading]="selectionLoading()"
+        [emptyText]="selectionEmptyText()" (close)="showSelection.set(false)"
+        (select)="onSelection($event)"></app-selection-dialog>
+    }
 </div>

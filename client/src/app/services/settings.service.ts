@@ -64,4 +64,12 @@ export class SettingsService {
     async getStats(): Promise<any> {
         return firstValueFrom(this.http.get(`${API}/stats`));
     }
+
+    async getWhatsAppGroups(): Promise<{ id: string; name: string }[]> {
+        return firstValueFrom(this.http.get<{ id: string; name: string }[]>(`${API}/wa/groups`));
+    }
+
+    async getRecentTelegramChannels(): Promise<{ id: string; name: string; username?: string; lastSeen: number }[]> {
+        return firstValueFrom(this.http.get<any[]>(`${API}/telegram/recents`));
+    }
 }

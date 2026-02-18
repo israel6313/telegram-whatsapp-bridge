@@ -113,6 +113,25 @@ app.post('/api/telegram/restart', async (_req, res) => {
     }
 });
 
+// ---- Discovery ----
+app.get('/api/wa/groups', async (_req, res) => {
+    try {
+        const groups = await waManager.getGroups();
+        res.json(groups);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/api/telegram/recents', (_req, res) => {
+    try {
+        const recents = tgBridge.getRecentChannels();
+        res.json(recents);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 /* -------------------------------------------------------------------- */
 /*  Socket.io Events                                                    */
 /* -------------------------------------------------------------------- */
