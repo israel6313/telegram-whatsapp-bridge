@@ -1,0 +1,202 @@
+.dashboard {
+    padding: 0;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* ---- Header ---- */
+.dash-header {
+    /* Like TG Chat Header */
+    background: var(--bg-secondary);
+    padding: 14px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    h1 {
+        font-size: 18px;
+        font-weight: 500;
+        /* TG font is usually 500 */
+        color: var(--text-primary);
+        margin: 0;
+    }
+}
+
+.connection-badge {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-secondary);
+}
+
+.badge-online {
+    color: var(--accent-primary);
+}
+
+/* TG uses blue for "online" usually */
+.badge-offline {
+    color: var(--text-muted);
+}
+
+/* ---- Cards List (Like Chat List or Settings Items) ---- */
+.cards-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    /* Divider look */
+    background: var(--bg-secondary);
+    /* Container BG */
+    margin: 20px 24px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.status-card {
+    background: var(--bg-secondary);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    cursor: default;
+    transition: background-color .1s;
+
+    &:hover {
+        background: var(--bg-card-hover);
+    }
+
+    &:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        right: 72px;
+        /* Margin for icon */
+        left: 0;
+        height: 1px;
+        background: #000;
+        /* Darker divider */
+        opacity: 0.2;
+    }
+}
+
+.card-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: #fff;
+    flex-shrink: 0;
+
+    &.wa-icon {
+        background: #4ecc5e;
+    }
+
+    &.queue-icon {
+        background: #f7a000;
+    }
+
+    &.stats-icon {
+        background: #5288c1;
+    }
+
+    &.error-icon {
+        background: #ff5e57;
+    }
+}
+
+.card-body {
+    flex: 1;
+
+    h3 {
+        font-size: 16px;
+        /* Title size */
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 2px;
+    }
+}
+
+.card-value {
+    font-size: 14px;
+    /* Subtitle size */
+    color: var(--text-secondary);
+}
+
+/* Modifiers */
+.status-ready .card-value {
+    color: var(--accent-success);
+}
+
+.status-error .card-value {
+    color: var(--accent-error);
+}
+
+.has-items .card-value {
+    color: var(--accent-primary);
+}
+
+.queue-badge {
+    background: var(--text-muted);
+    color: #fff;
+    font-size: 12px;
+    padding: 2px 10px;
+    border-radius: 12px;
+    min-width: 24px;
+    text-align: center;
+}
+
+.has-items .queue-badge {
+    background: var(--accent-primary);
+    /* Unread count badge color */
+}
+
+/* ---- QR Section ---- */
+.qr-section {
+    text-align: center;
+    padding: 24px;
+    margin: 0 24px 24px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+
+    h2 {
+        font-size: 18px;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+
+    .qr-hint {
+        color: var(--text-secondary);
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+}
+
+.qr-container {
+    display: inline-block;
+    padding: 12px;
+    background: #fff;
+    border-radius: var(--radius-sm);
+}

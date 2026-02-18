@@ -1,0 +1,169 @@
+.app-shell {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background-color: var(--bg-primary);
+}
+
+/* ---- Sidebar ---- */
+.sidebar {
+    width: 280px;
+    /* Slightly wider like TG desktop */
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-secondary);
+    border-left: 1px solid var(--border-color);
+    /* RTL */
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 22px;
+    /* No border bottom in TG usually, maybe subtle */
+}
+
+.brand-icon {
+    font-size: 24px;
+    /* TG logo style */
+    background: var(--accent-primary);
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.brand-text {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.nav-links {
+    flex: 1;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    transition: background-color .1s;
+
+    &:hover {
+        background-color: var(--bg-card-hover);
+        color: var(--text-primary);
+    }
+
+    &.active {
+        background-color: #2b5278;
+        /* Active item BG */
+        color: #fff;
+    }
+}
+
+.nav-icon {
+    font-size: 20px;
+    width: 24px;
+    text-align: center;
+}
+
+/* ---- Sidebar Footer ---- */
+.sidebar-footer {
+    padding: 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+.server-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent-error);
+    transition: background .3s;
+
+    &.online {
+        background: var(--accent-success);
+    }
+}
+
+/* ---- Main Content ---- */
+.main-content {
+    flex: 1;
+    overflow-y: auto;
+    background: var(--bg-primary);
+    /* Chat pattern bg usually here */
+    /* Optional: Add a subtle pattern if requested, but solid for now */
+    position: relative;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+    .app-shell {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        flex-direction: row;
+        border-left: none;
+        background: var(--bg-secondary);
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+        /* Mobile bottom nav style usually, but here top/bottom depends */
+        order: 2;
+        /* Sidebar at bottom for mobile like app bar? or top? keeping similar structure */
+        border-top: 1px solid var(--border-color);
+    }
+
+    .sidebar-brand,
+    .sidebar-footer {
+        display: none;
+    }
+
+    .nav-links {
+        flex-direction: row;
+        justify-content: space-around;
+        padding: 0;
+    }
+
+    .nav-item {
+        flex-direction: column;
+        gap: 4px;
+        padding: 8px;
+        border-radius: 0;
+        font-size: 11px;
+        flex: 1;
+        justify-content: center;
+
+        &.active {
+            background: none;
+            color: var(--accent-primary);
+        }
+    }
+
+    .nav-icon {
+        font-size: 24px;
+    }
+}

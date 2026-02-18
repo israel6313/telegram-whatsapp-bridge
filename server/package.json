@@ -1,0 +1,22 @@
+{
+  "name": "tg-wa-bridge-server",
+  "version": "1.0.0",
+  "description": "Telegram to WhatsApp Bridge - Backend Server",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --watch server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "fs-extra": "^11.2.0",
+    "lowdb": "^7.0.1",
+    "qrcode": "^1.5.3",
+    "socket.io": "^4.7.4",
+    "telegraf": "^4.16.3",
+    "whatsapp-web.js": "^1.25.0"
+  }
+}

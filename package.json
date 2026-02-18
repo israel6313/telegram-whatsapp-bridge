@@ -1,0 +1,12 @@
+{
+    "name": "tg-wa-bridge",
+    "version": "1.0.0",
+    "description": "Telegram to WhatsApp Bridge - SaaS Edition",
+    "private": true,
+    "scripts": {
+        "start": "npx concurrently -n SERVER,CLIENT -c blue,magenta \"npm run server\" \"npm run client\"",
+        "server": "cd server && node server.js",
+        "client": "cd client && npx ng serve --open",
+        "install:all": "cd server && npm install && cd ../client && npm install"
+    }
+}

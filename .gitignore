@@ -1,0 +1,12 @@
+node_modules/
+.env
+.wwebjs_auth/
+.wwebjs_cache/
+server/.wwebjs_auth/
+server/.wwebjs_cache/
+dist/
+server/data/
+server/db/*.json
+!server/db/database.js
+*.log
+.DS_Store

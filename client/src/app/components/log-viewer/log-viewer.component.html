@@ -1,0 +1,33 @@
+<div class="terminal-container">
+    <div class="terminal-header">
+        <div class="terminal-dots">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+        </div>
+        <span class="terminal-title">System Logs</span>
+        <button class="clear-btn" (click)="clearLogs()">🗑️ נקה</button>
+    </div>
+
+    <div class="terminal-body" #scrollContainer>
+        @if(socket.logs().length === 0) {
+        <div class="empty-state">
+            <span class="empty-icon">📋</span>
+            <p>אין לוגים עדיין... מחכה לאירועים</p>
+        </div>
+        }
+
+        @for(log of socket.logs(); track $index) {
+        <div class="log-line" [class]="getLogClass(log.level)">
+            <span class="log-time">{{ formatTime(log.timestamp) }}</span>
+            <span class="log-level">[{{ log.level.toUpperCase() }}]</span>
+            <span class="log-msg">{{ log.message }}</span>
+        </div>
+        }
+    </div>
+
+    <div class="terminal-footer">
+        <span class="log-count">{{ socket.logs().length }} אירועים</span>
+        <span class="cursor-blink">▊</span>
+    </div>
+</div>

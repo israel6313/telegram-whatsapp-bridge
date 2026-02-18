@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: tg-wa-bridge
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      # Persist data (queue, db, settings)
+      - ./server/data:/app/server/data
+      - ./server/db:/app/server/db
+      # Persist WhatsApp authentication session
+      - ./server/.wwebjs_auth:/app/server/.wwebjs_auth
+    env_file:
+      - .env
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      # Ensure Puppeteer runs with these args in Docker
+      - PUPPETEER_ARGS=--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --disable-gpu
