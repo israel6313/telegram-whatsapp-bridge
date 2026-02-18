@@ -18,6 +18,12 @@ export class TelegramBridge {
         this.getSettings = getSettings;
         /** @type {Telegraf | null} */
         this.bot = null;
+
+        /**
+         * Cache for Media Groups (Albums).
+         * Map<groupId, { timeout: NodeJS.Timeout, messages: Array<ctx> }>
+         */
+        this.mediaGroupCache = new Map();
     }
 
     /* ------------------------------------------------------------------ */
@@ -93,29 +99,77 @@ export class TelegramBridge {
         const chatId = String(ctx.chat.id);
         const chatTitle = ctx.chat.title || 'Private Chat';
 
-        // Debug log: Print every message the bot hears
-        this._log(`👂 התקבלה הודעה מ-ID: ${chatId} (${chatTitle})`, 'info');
-
         // Filter: only listen to the configured channels
-        // If no channels are configured, we might want to ignore everything or allow everything. 
-        // Current logic: if channels ARE configured, check if this is one of them.
         if (channelIds.length > 0 && !channelIds.includes(chatId)) {
-            this._log(`⚠️ מתעלם מהודעה: ID לא תואם (רשימה: ${channelIds.join(', ')}, התקבל: ${chatId})`, 'warning');
+            // Only log if it's NOT a media group part (to avoid spamming logs for every photo in an album)
+            // But we don't know if it's an album yet easily without parsing. 
+            // We'll log just once per message ID usually.
+            // this._log(`⚠️ מתעלם מהודעה: ID לא תואם (רשימה: ${channelIds.join(', ')}, התקבל: ${chatId})`, 'warning');
             return;
         }
 
-        const waGroupId = settings.whatsappGroupId?.trim();
-        if (!waGroupId) {
-            this._log('⚠️ WhatsApp Group ID לא הוגדר', 'warning');
+        // Check for Media Group (Album)
+        const msg = ctx.message || ctx.channelPost;
+        if (msg && msg.media_group_id) {
+            this._handleMediaGroup(ctx, msg.media_group_id, settings);
             return;
         }
+
+        // Regular single message
+        await this._processSingleMessage(ctx, settings);
+    }
+
+    /**
+     * Buffer media group messages and process them together.
+     */
+    _handleMediaGroup(ctx, groupId, settings) {
+        if (!this.mediaGroupCache.has(groupId)) {
+            this.mediaGroupCache.set(groupId, {
+                messages: [],
+                timeout: null
+            });
+            this._log(`📦 זוהה אלבום תמונות (ID: ${groupId}), ממתין לשאר החלקים...`, 'info');
+        }
+
+        const group = this.mediaGroupCache.get(groupId);
+
+        // Add current message to buffer
+        group.messages.push(ctx);
+
+        // Reset timeout (debounce)
+        if (group.timeout) clearTimeout(group.timeout);
+
+        group.timeout = setTimeout(() => {
+            this.mediaGroupCache.delete(groupId);
+            this._processMediaGroup(group.messages, settings);
+        }, 2000); // Wait 2 seconds for all parts to arrive
+    }
+
+    async _processMediaGroup(ctxList, settings) {
+        this._log(`🚀 מעבד אלבום עם ${ctxList.length} פריטים...`, 'info');
+
+        // Sort by message ID to ensure order
+        ctxList.sort((a, b) => {
+            const msgA = a.message || a.channelPost;
+            const msgB = b.message || b.channelPost;
+            return msgA.message_id - msgB.message_id;
+        });
+
+        for (const ctx of ctxList) {
+            await this._processSingleMessage(ctx, settings);
+            // Small delay between album items to ensure strict order in WhatsApp
+            await new Promise(r => setTimeout(r, 500));
+        }
+        this._log(`✅ אלבום נשלח בהצלחה`, 'success');
+    }
+
+    async _processSingleMessage(ctx, settings) {
+        const waGroupId = settings.whatsappGroupId?.trim();
+        if (!waGroupId) return;
 
         try {
             const payload = await this._buildPayload(ctx, settings);
-            if (!payload) {
-                this._log('⚠️ סוג הודעה לא נתמך או ללא תוכן', 'warning');
-                return;
-            }
+            if (!payload) return; // unsupported or filtered
 
             if (this.wa.isReady) {
                 await this._sendToWhatsApp(waGroupId, payload);
@@ -135,27 +189,27 @@ export class TelegramBridge {
      */
     async _buildPayload(ctx, settings) {
         const footer = settings.footerText ? `\n\n${settings.footerText}` : '';
-        // In channel_post events, the message is in ctx.channelPost, not ctx.message
         const msg = ctx.message || ctx.channelPost;
-
         if (!msg) return null;
+
+        // Use new Entity Parser for text/caption
+        const caption = msg.caption ? this._parseEntities(msg.caption, msg.caption_entities) + footer : footer;
+        const text = msg.text ? this._parseEntities(msg.text, msg.entities) + footer : '';
 
         // --- Text ---
         if (msg.text) {
-            return { text: this._convertFormatting(msg.text) + footer };
+            return { text };
         }
 
         // --- Photo ---
         if (msg.photo) {
             const photo = msg.photo[msg.photo.length - 1]; // highest resolution
-            const caption = msg.caption ? this._convertFormatting(msg.caption) + footer : footer;
             const media = await this._downloadTelegramFile(ctx, photo.file_id, 'image/jpeg');
             return { text: caption, media };
         }
 
         // --- Document ---
         if (msg.document) {
-            const caption = msg.caption ? this._convertFormatting(msg.caption) + footer : footer;
             const media = await this._downloadTelegramFile(
                 ctx,
                 msg.document.file_id,
@@ -167,7 +221,6 @@ export class TelegramBridge {
 
         // --- Video ---
         if (msg.video) {
-            const caption = msg.caption ? this._convertFormatting(msg.caption) + footer : footer;
             const media = await this._downloadTelegramFile(
                 ctx,
                 msg.video.file_id,
@@ -177,11 +230,12 @@ export class TelegramBridge {
             return { text: caption, media };
         }
 
-        // --- Sticker / Animation (GIF) ---
+        // --- Sticker ---
         if (msg.sticker) {
             return { text: `[Sticker] ${msg.sticker.emoji || ''}${footer}` };
         }
 
+        // --- Animation (GIF) ---
         if (msg.animation) {
             const media = await this._downloadTelegramFile(
                 ctx,
@@ -192,9 +246,8 @@ export class TelegramBridge {
             return { text: footer || '', media };
         }
 
-        // --- Audio (Music) ---
+        // --- Audio ---
         if (msg.audio) {
-            const caption = msg.caption ? this._convertFormatting(msg.caption) + footer : footer;
             const media = await this._downloadTelegramFile(
                 ctx,
                 msg.audio.file_id,
@@ -206,7 +259,6 @@ export class TelegramBridge {
 
         // --- Voice Note ---
         if (msg.voice) {
-            const caption = msg.caption ? this._convertFormatting(msg.caption) + footer : footer;
             const media = await this._downloadTelegramFile(
                 ctx,
                 msg.voice.file_id,
@@ -225,7 +277,6 @@ export class TelegramBridge {
 
     /**
      * Download a file from Telegram and return it as a Base64 media object.
-     * This avoids the "Corrupted Object" error in WA by converting Buffer → Base64.
      */
     async _downloadTelegramFile(ctx, fileId, mimetype, filename) {
         const fileLink = await ctx.telegram.getFileLink(fileId);
@@ -247,17 +298,73 @@ export class TelegramBridge {
     }
 
     /**
-     * Convert Telegram HTML/Markdown formatting to WhatsApp markdown.
-     * Telegram: <b>, <i>, <s>  →  WhatsApp: *, _, ~
+     * Parse formatting entities (Bold, Italic, Code, etc.)
+     * Telegram Entities: [{ offset, length, type }]
      */
-    _convertFormatting(text) {
-        if (!text) return '';
-        return text
-            .replace(/<b>(.*?)<\/b>/g, '*$1*')
-            .replace(/<i>(.*?)<\/i>/g, '_$1_')
-            .replace(/<s>(.*?)<\/s>/g, '~$1~')
-            .replace(/<code>(.*?)<\/code>/g, '```$1```')
-            .replace(/<[^>]+>/g, ''); // strip remaining HTML
+    _parseEntities(text, entities) {
+        if (!entities || !entities.length) return text;
+
+        // Convert string to array of characters because JS strings are immutable
+        // and UTF-16 split can be tricky, but for simple markers, array split is easiest usually.
+        // However, simple slice works fine if we handle indices backwards to avoid shifting.
+
+        // We will insert markers into the string.
+        let result = text;
+
+        // Sort entities by offset descending so we can modify string from end to start
+        // without messing up the offsets of earlier entities.
+        const sorted = [...entities].sort((a, b) => b.offset - a.offset);
+
+        for (const ent of sorted) {
+            const { offset, length, type } = ent;
+            const start = offset;
+            const end = offset + length;
+
+            let prefix = '';
+            let suffix = '';
+
+            switch (type) {
+                case 'bold':
+                    prefix = '*'; suffix = '*';
+                    break;
+                case 'italic':
+                    prefix = '_'; suffix = '_';
+                    break;
+                case 'strikethrough':
+                    prefix = '~'; suffix = '~';
+                    break;
+                case 'code':
+                    prefix = '```'; suffix = '```';
+                    break;
+                case 'pre':
+                    prefix = '```\n'; suffix = '\n```';
+                    break;
+                case 'spoiler':
+                    // WA doesn't support spoilers standardized, maybe simple block?
+                    prefix = '|| '; suffix = ' ||'; // generic conventions
+                    break;
+                // 'text_link' (URL) is usually just clickable in WA, but we can format it if needed.
+                // For now, keep as plain text (WA auto-links URLs).
+                case 'text_link':
+                    // e.g. [text](url) -> WA doesn't support Markdown links properly, only raw URLs.
+                    // So we just leave the text as is, or maybe append (url).
+                    // decided: Leave as is.
+                    break;
+                default:
+                    continue;
+            }
+
+            // Insert suffix first, then prefix
+            // Note: JS strings are 16-bit code units. Telegram offsets are usually UTF-16 code units.
+            // So slice works perfectly.
+            const before = result.slice(0, start);
+            const inner = result.slice(start, end);
+            const after = result.slice(end);
+
+            result = before + prefix + inner + suffix + after;
+        }
+
+        return result;
     }
 
     _log(message, level = 'info') {
