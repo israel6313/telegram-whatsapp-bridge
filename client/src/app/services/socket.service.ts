@@ -27,8 +27,10 @@ export class SocketService {
     readonly isReady = computed(() => this.waStatus() === 'ready');
 
     constructor() {
-        this.socket = io('http://localhost:3000', {
+        // Empty URL = connect to same host/port as the page (window.location)
+        this.socket = io({
             transports: ['websocket', 'polling'],
+            path: '/socket.io',
         });
 
         this.socket.on('connect', () => {
