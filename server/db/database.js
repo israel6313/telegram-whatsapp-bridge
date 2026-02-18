@@ -47,10 +47,19 @@ export async function getDb() {
 
 /**
  * Get current settings object.
+ * Merges DB settings with Environment Variables (Env overrides empty DB values).
  */
 export async function getSettings() {
     const db = await getDb();
-    return db.data.settings;
+    const s = db.data.settings;
+
+    return {
+        ...s,
+        // If DB value is empty, try to use Environment Variable
+        telegramBotToken: s.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN || '',
+        telegramChannelId: s.telegramChannelId || process.env.TELEGRAM_CHANNEL_ID || '',
+        whatsappGroupId: s.whatsappGroupId || process.env.WHATSAPP_GROUP_ID || '',
+    };
 }
 
 /**
@@ -60,7 +69,7 @@ export async function updateSettings(partial) {
     const db = await getDb();
     db.data.settings = { ...db.data.settings, ...partial };
     await db.write();
-    return db.data.settings;
+    return await getSettings(); // Return the merged result
 }
 
 /**
