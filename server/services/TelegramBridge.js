@@ -166,13 +166,38 @@ export class TelegramBridge {
 
         this._log(`📦 כל המדיה ירדה (${payloads.filter(Boolean).length} קבצים), שולח ל-WhatsApp...`, 'info');
 
-        // 2. Send Rapidly (Sequential but without artificial delay)
+        // 2. Send Rapidly (Fire & Forget Strategy)
+        // We do NOT await the result of each message here, because waiting for WA to ACK 
+        // adds a delay (~500ms) that breaks the "visual grouping".
+        // Instead, we fire them into the browser queue comfortably apart (100ms) to ensure order,
+        // but close enough to be grouped.
+
+        let promiseChain = Promise.resolve();
+        const sendPromises = [];
+
         for (const payload of payloads) {
             if (!payload) continue;
-            await this._dispatchPayload(waGroupId, payload);
+
+            // Chain the *initiation* of sends to ensure order is submitted to browser in 1->2->3 order
+            promiseChain = promiseChain.then(async () => {
+                // Dispatch without awaiting the full roundtrip inside the chain lock
+                // We trust wwebjs to queue them.
+                const p = this._dispatchPayload(waGroupId, payload).catch(err => {
+                    this._log(`❌ שגיאה באלבום: ${err.message}`, 'error');
+                });
+                sendPromises.push(p);
+
+                // Tiny delay to ensure the browser processes the submission order
+                await new Promise(r => setTimeout(r, 150));
+            });
         }
 
-        this._log(`✅ אלבום נשלח בהצלחה`, 'success');
+        // Wait for all to be submitted
+        await promiseChain;
+        // Optionally wait for them to finish sending (background)
+        // await Promise.all(sendPromises); 
+
+        this._log(`✅ אלבום נשלח (תהליך שליחה ברקע)`, 'success');
     }
 
     // New helper to handle the Send vs Queue decision
