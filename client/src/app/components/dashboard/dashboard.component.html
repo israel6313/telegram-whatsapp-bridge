@@ -10,7 +10,7 @@
     <!-- WhatsApp Status -->
     <div class="card stat-card" [class]="getStatusClass()">
       <div class="stat-header">
-        <span class="stat-icon wa">📱</span>
+        <div class="stat-icon wa"><i class='bx bxl-whatsapp'></i></div>
         <span class="stat-label">WhatsApp</span>
       </div>
       <div class="stat-value">{{ getStatusLabel() }}</div>
@@ -22,7 +22,7 @@
     <!-- Queue -->
     <div class="card stat-card" [class.has-items]="socket.queueCount() > 0">
       <div class="stat-header">
-        <span class="stat-icon queue">📥</span>
+        <div class="stat-icon queue"><i class='bx bx-list-ol'></i></div>
         <span class="stat-label">תור הודעות</span>
       </div>
       <div class="stat-value stat-number">{{ socket.queueCount() }}</div>
@@ -34,7 +34,7 @@
     <!-- Forwarded -->
     <div class="card stat-card">
       <div class="stat-header">
-        <span class="stat-icon stats">📊</span>
+        <div class="stat-icon stats"><i class='bx bx-bar-chart-alt-2'></i></div>
         <span class="stat-label">הועברו</span>
       </div>
       <div class="stat-value stat-number">{{ stats()?.totalForwarded ?? 0 }}</div>
@@ -43,7 +43,7 @@
     <!-- Errors -->
     <div class="card stat-card" [class.has-errors]="(stats()?.totalErrors ?? 0) > 0">
       <div class="stat-header">
-        <span class="stat-icon error">⚠️</span>
+        <div class="stat-icon error"><i class='bx bx-error'></i></div>
         <span class="stat-label">שגיאות</span>
       </div>
       <div class="stat-value stat-number error-count">{{ stats()?.totalErrors ?? 0 }}</div>

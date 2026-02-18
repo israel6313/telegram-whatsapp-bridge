@@ -35,12 +35,12 @@ export class SocketService {
 
         this.socket.on('connect', () => {
             this.connected.set(true);
-            this.addLog({ timestamp: new Date().toISOString(), message: '🟢 מחובר לשרת', level: 'success' });
+            this.addLog({ timestamp: new Date().toISOString(), message: 'מחובר לשרת', level: 'success' });
         });
 
         this.socket.on('disconnect', () => {
             this.connected.set(false);
-            this.addLog({ timestamp: new Date().toISOString(), message: '🔴 התנתק מהשרת', level: 'error' });
+            this.addLog({ timestamp: new Date().toISOString(), message: 'התנתק מהשרת', level: 'error' });
         });
 
         this.socket.on('log', (entry: LogEntry) => {

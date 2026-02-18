@@ -10,9 +10,11 @@ import { ToastService } from '../../services/toast.service';
         <div class="toast-stack">
             @for (toast of toastService.toasts(); track toast.id) {
                 <div class="toast-item" [attr.data-type]="toast.type" (click)="toastService.dismiss(toast.id)">
-                    <span class="toast-icon">{{ getIcon(toast.type) }}</span>
+                    <div class="toast-icon">
+                        <i [class]="getIcon(toast.type)"></i>
+                    </div>
                     <span class="toast-msg">{{ toast.message }}</span>
-                    <button class="toast-close">✕</button>
+                    <button class="toast-close"><i class='bx bx-x'></i></button>
                 </div>
             }
         </div>
@@ -50,11 +52,11 @@ import { ToastService } from '../../services/toast.service';
             &[data-type="info"]    { border-right: 3px solid var(--accent-purple); }
         }
 
-        .toast-icon { font-size: 18px; flex-shrink: 0; }
+        .toast-icon { font-size: 20px; flex-shrink: 0; display: flex; align-items: center; }
         .toast-msg { flex: 1; }
         .toast-close {
             background: none; border: none; color: var(--text-muted);
-            font-size: 14px; cursor: pointer; padding: 0;
+            font-size: 18px; cursor: pointer; padding: 0; display: flex; align-items: center;
             &:hover { color: var(--text-primary); }
         }
 
@@ -68,6 +70,12 @@ export class ToastComponent {
     readonly toastService = inject(ToastService);
 
     getIcon(type: string): string {
-        return { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' }[type] || 'ℹ️';
+        switch (type) {
+            case 'success': return 'bx bxs-check-circle';
+            case 'error': return 'bx bxs-x-circle';
+            case 'warning': return 'bx bxs-error';
+            case 'info': return 'bx bxs-info-circle';
+            default: return 'bx bxs-info-circle';
+        }
     }
 }

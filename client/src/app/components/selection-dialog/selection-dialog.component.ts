@@ -17,10 +17,10 @@ export interface SelectionItem {
                 <h3 class="dialog-title">{{ title() }}</h3>
                 <div class="list-container">
                     @if (loading()) {
-                        <div class="state-msg">⏳ טוען...</div>
+                        <div class="state-msg"><i class='bx bx-loader-alt bx-spin'></i> טוען...</div>
                     } @else if (items().length === 0) {
                         <div class="state-msg">
-                            🚫 לא נמצאו תוצאות.
+                            <i class='bx bx-ghost'></i> לא נמצאו תוצאות.
                             <br><span class="sub-msg">{{ emptyText() }}</span>
                         </div>
                     } @else {

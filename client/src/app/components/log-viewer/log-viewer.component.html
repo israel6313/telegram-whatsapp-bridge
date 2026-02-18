@@ -4,14 +4,14 @@
             <h1 class="page-title">לוגים</h1>
             <p class="page-subtitle">{{ socket.logs().length }} אירועים</p>
         </div>
-        <button class="btn btn-ghost" (click)="clearLogs()">🗑️ נקה</button>
+        <button class="btn btn-ghost" (click)="clearLogs()"><i class='bx bx-trash'></i> נקה</button>
     </div>
 
     <div class="card log-card">
         <div class="log-body" #scrollContainer>
             @if (socket.logs().length === 0) {
             <div class="empty-state">
-                <span class="empty-icon">📋</span>
+                <div class="empty-icon"><i class='bx bx-clipboard'></i></div>
                 <p>אין לוגים עדיין... מחכה לאירועים</p>
             </div>
             }

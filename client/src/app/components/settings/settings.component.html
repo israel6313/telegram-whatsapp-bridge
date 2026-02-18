@@ -8,7 +8,7 @@
         <!-- Telegram Bot Token -->
         <section class="card section-card">
             <div class="section-header">
-                <span class="section-icon tg">🤖</span>
+                <div class="section-icon tg"><i class='bx bxl-telegram'></i></div>
                 <h3>Telegram Bot</h3>
             </div>
             <div class="section-body">
@@ -18,7 +18,8 @@
                         [ngModel]="form().telegramBotToken" (ngModelChange)="updateField('telegramBotToken', $event)" />
                 </div>
                 <button class="btn btn-ghost" (click)="restartBot()" [disabled]="settingsService.loading()">
-                    🔄 {{ settingsService.loading() ? 'מפעיל מחדש...' : 'הפעל מחדש את הבוט' }}
+                    <i class='bx bx-refresh'></i> {{ settingsService.loading() ? 'מפעיל מחדש...' : 'הפעל מחדש את הבוט'
+                    }}
                 </button>
             </div>
         </section>
@@ -26,18 +27,22 @@
         <!-- Telegram Channels -->
         <section class="card section-card">
             <div class="section-header">
-                <span class="section-icon tg">📢</span>
+                <div class="section-icon tg"><i class='bx bxs-megaphone'></i></div>
                 <h3>ערוצי Telegram</h3>
-                <button class="btn btn-primary btn-sm" (click)="addChannel()">+ הוסף ידנית</button>
-                <button class="btn btn-ghost btn-sm" (click)="openChannelDiscovery()">🔍 מצא ערוצים</button>
+                <button class="btn btn-primary btn-sm" (click)="addChannel()"><i class='bx bx-plus'></i> הוסף
+                    ידנית</button>
+                <button class="btn btn-ghost btn-sm" (click)="openChannelDiscovery()"><i class='bx bx-search'></i> מצא
+                    ערוצים</button>
             </div>
             <div class="section-body">
                 @if (channels().length === 0) {
                 <div class="empty-list">
                     <p>לא הוספו ערוצים עדיין</p>
                     <div class="buttons-row">
-                        <button class="btn btn-ghost" (click)="addChannel()">+ הוסף ידנית</button>
-                        <button class="btn btn-ghost" (click)="openChannelDiscovery()">🔍 מצא ערוצים פעילים</button>
+                        <button class="btn btn-ghost" (click)="addChannel()"><i class='bx bx-plus'></i> הוסף
+                            ידנית</button>
+                        <button class="btn btn-ghost" (click)="openChannelDiscovery()"><i class='bx bx-search'></i> מצא
+                            ערוצים פעילים</button>
                     </div>
                 </div>
                 }
@@ -49,7 +54,8 @@
                         <input class="input input-sm input-mono" placeholder="-1001234567890" [ngModel]="ch.id"
                             (ngModelChange)="updateChannel(i, 'id', $event)" />
                     </div>
-                    <button class="btn-icon btn-icon-danger" (click)="removeChannel(i)" title="הסר ערוץ">🗑️</button>
+                    <button class="btn-icon btn-icon-danger" (click)="removeChannel(i)" title="הסר ערוץ"><i
+                            class='bx bx-trash'></i></button>
                 </div>
                 }
             </div>
@@ -58,18 +64,22 @@
         <!-- WhatsApp Groups -->
         <section class="card section-card">
             <div class="section-header">
-                <span class="section-icon wa">📱</span>
+                <div class="section-icon wa"><i class='bx bxl-whatsapp'></i></div>
                 <h3>קבוצות WhatsApp</h3>
-                <button class="btn btn-primary btn-sm" (click)="addGroup()">+ הוסף ידנית</button>
-                <button class="btn btn-ghost btn-sm" (click)="openGroupDiscovery()">🔍 מצא קבוצות</button>
+                <button class="btn btn-primary btn-sm" (click)="addGroup()"><i class='bx bx-plus'></i> הוסף
+                    ידנית</button>
+                <button class="btn btn-ghost btn-sm" (click)="openGroupDiscovery()"><i class='bx bx-search'></i> מצא
+                    קבוצות</button>
             </div>
             <div class="section-body">
                 @if (groups().length === 0) {
                 <div class="empty-list">
                     <p>לא הוספו קבוצות עדיין</p>
                     <div class="buttons-row">
-                        <button class="btn btn-ghost" (click)="addGroup()">+ הוסף ידנית</button>
-                        <button class="btn btn-ghost" (click)="openGroupDiscovery()">🔍 מצא קבוצות מהחשבון</button>
+                        <button class="btn btn-ghost" (click)="addGroup()"><i class='bx bx-plus'></i> הוסף
+                            ידנית</button>
+                        <button class="btn btn-ghost" (click)="openGroupDiscovery()"><i class='bx bx-search'></i> מצא
+                            קבוצות מהחשבון</button>
                     </div>
                 </div>
                 }
@@ -81,14 +91,15 @@
                         <input class="input input-sm input-mono" placeholder="120363xxx&#64;g.us" [ngModel]="gr.id"
                             (ngModelChange)="updateGroup(i, 'id', $event)" />
                     </div>
-                    <button class="btn-icon btn-icon-danger" (click)="removeGroup(i)" title="הסר קבוצה">🗑️</button>
+                    <button class="btn-icon btn-icon-danger" (click)="removeGroup(i)" title="הסר קבוצה"><i
+                            class='bx bx-trash'></i></button>
                 </div>
                 }
             </div>
 
             <div class="section-footer">
                 <button class="btn btn-danger btn-sm" (click)="hardReset()">
-                    🔨 Hard Reset (התחברות מחדש)
+                    <i class='bx bx-trash-alt'></i> Hard Reset (התחברות מחדש)
                 </button>
             </div>
         </section>
@@ -96,14 +107,17 @@
         <!-- Footer Editor -->
         <section class="card section-card">
             <div class="section-header">
-                <span class="section-icon edit">✏️</span>
+                <div class="section-icon edit"><i class='bx bx-edit-alt'></i></div>
                 <h3>טקסט תחתון (Footer)</h3>
             </div>
             <div class="section-body">
                 <div class="toolbar">
-                    <button class="btn-icon" (click)="insertMarkdown('bold')" title="Bold"><strong>B</strong></button>
-                    <button class="btn-icon" (click)="insertMarkdown('italic')" title="Italic"><em>I</em></button>
-                    <button class="btn-icon" (click)="insertMarkdown('strike')" title="Strikethrough"><s>S</s></button>
+                    <button class="btn-icon" (click)="insertMarkdown('bold')" title="Bold"><i
+                            class='bx bx-bold'></i></button>
+                    <button class="btn-icon" (click)="insertMarkdown('italic')" title="Italic"><i
+                            class='bx bx-italic'></i></button>
+                    <button class="btn-icon" (click)="insertMarkdown('strike')" title="Strikethrough"><i
+                            class='bx bx-strikethrough'></i></button>
                 </div>
                 <textarea class="input" rows="3" placeholder="טקסט שיצורף לכל הודעה..." [ngModel]="form().footerText"
                     (ngModelChange)="updateField('footerText', $event)"></textarea>
@@ -114,7 +128,7 @@
         <!-- Queue Settings -->
         <section class="card section-card">
             <div class="section-header">
-                <span class="section-icon queue">📥</span>
+                <div class="section-icon queue"><i class='bx bx-list-ol'></i></div>
                 <h3>תור הודעות</h3>
             </div>
             <div class="section-body">
@@ -135,7 +149,13 @@
     <!-- Save Bar -->
     <div class="save-bar">
         <button class="btn btn-primary btn-lg" (click)="save()" [disabled]="settingsService.loading()">
-            {{ settingsService.loading() ? '⏳ שומר...' : '💾 שמור הגדרות' }}
+            {{ settingsService.loading() ? '' : '' }}
+            <ng-container *ngIf="settingsService.loading(); else saveIcon">
+                <i class='bx bx-loader-alt bx-spin'></i> שומר...
+            </ng-container>
+            <ng-template #saveIcon>
+                <i class='bx bx-save'></i> שמור הגדרות
+            </ng-template>
         </button>
     </div>
 
