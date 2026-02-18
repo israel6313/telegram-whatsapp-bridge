@@ -168,7 +168,7 @@ export class WhatsAppManager {
     }
 
     _log(message, level = 'info') {
-        const entry = { timestamp: new Date().toISOString(), message, level };
+        const entry = { timestamp: new Date().toISOString(), message, category: 'WHATSAPP', level };
         console.log(`[WA] ${message}`);
         if (this.io) this.io.emit('log', entry);
     }

@@ -84,16 +84,23 @@ export class TelegramBridge {
 
     async _handleMessage(ctx) {
         const settings = await this.getSettings();
-        const channelId = settings.telegramChannelId?.trim();
+        // Parse configured channels (comma-separated support)
+        const channelIds = (settings.telegramChannelId || '')
+            .split(',')
+            .map(id => id.trim())
+            .filter(Boolean);
+
         const chatId = String(ctx.chat.id);
         const chatTitle = ctx.chat.title || 'Private Chat';
 
         // Debug log: Print every message the bot hears
         this._log(`👂 התקבלה הודעה מ-ID: ${chatId} (${chatTitle})`, 'info');
 
-        // Filter: only listen to the configured channel
-        if (channelId && chatId !== String(channelId)) {
-            this._log(`⚠️ מתעלם מהודעה: ID לא תואם (הגדרות: ${channelId || 'ריק'}, התקבל: ${chatId})`, 'warning');
+        // Filter: only listen to the configured channels
+        // If no channels are configured, we might want to ignore everything or allow everything. 
+        // Current logic: if channels ARE configured, check if this is one of them.
+        if (channelIds.length > 0 && !channelIds.includes(chatId)) {
+            this._log(`⚠️ מתעלם מהודעה: ID לא תואם (רשימה: ${channelIds.join(', ')}, התקבל: ${chatId})`, 'warning');
             return;
         }
 
@@ -254,7 +261,7 @@ export class TelegramBridge {
     }
 
     _log(message, level = 'info') {
-        const entry = { timestamp: new Date().toISOString(), message, level };
+        const entry = { timestamp: new Date().toISOString(), message, category: 'TELEGRAM', level };
         console.log(`[TG] ${message}`);
         if (this.io) this.io.emit('log', entry);
     }

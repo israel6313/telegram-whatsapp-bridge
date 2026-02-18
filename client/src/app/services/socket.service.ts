@@ -4,6 +4,7 @@ import { io, Socket } from 'socket.io-client';
 export interface LogEntry {
     timestamp: string;
     message: string;
+    category?: string;
     level: 'info' | 'success' | 'error' | 'warning';
 }
 

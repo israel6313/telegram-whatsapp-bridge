@@ -48,6 +48,43 @@
     }
 }
 
+.timestamp {
+    color: #64748b;
+    margin-right: 0px; // Hebrew RTL
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.category-badge {
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    flex-shrink: 0;
+
+    &[data-category="SYSTEM"] {
+        background: #475569;
+        color: #f1f5f9;
+    }
+
+    &[data-category="TELEGRAM"] {
+        background: #0ea5e9;
+        color: #fff;
+    }
+
+    &[data-category="WHATSAPP"] {
+        background: #22c55e;
+        color: #fff;
+    }
+
+    &[data-category="QUEUE"] {
+        background: #f59e0b;
+        color: #fff;
+    }
+}
+
 /* ---- Body (Chat-like bubbles for logs?) No, keep terminal but clean */
 .terminal-body {
     flex: 1;

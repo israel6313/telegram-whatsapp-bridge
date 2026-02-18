@@ -122,7 +122,7 @@ export class QueueService {
     }
 
     _log(message, level = 'info') {
-        const entry = { timestamp: new Date().toISOString(), message, level };
+        const entry = { timestamp: new Date().toISOString(), message, category: 'QUEUE', level };
         console.log(`[Queue] ${message}`);
         if (this.io) this.io.emit('log', entry);
     }

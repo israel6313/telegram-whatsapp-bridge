@@ -65,7 +65,7 @@ app.post('/api/settings', async (req, res) => {
     try {
         const updated = await updateSettings(req.body);
         res.json(updated);
-        emitLog('⚙️ הגדרות עודכנו', 'success');
+        emitLog('⚙️ הגדרות עודכנו', 'SYSTEM', 'success');
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -103,7 +103,7 @@ app.post('/api/wa/hard-reset', async (_req, res) => {
 
 // ---- Telegram restart ----
 app.post('/api/telegram/restart', async (_req, res) => {
-    emitLog('🔄 התקבלה בקשה להפעלה מחדש של הבוט...', 'info');
+    emitLog('🔄 התקבלה בקשה להפעלה מחדש של הבוט...', 'TELEGRAM', 'info');
     try {
         tgBridge.stop();
         await tgBridge.start();
@@ -119,7 +119,7 @@ app.post('/api/telegram/restart', async (_req, res) => {
 
 io.on('connection', (socket) => {
     console.log(`[IO] Client connected: ${socket.id}`);
-    emitLog('🟢 לקוח התחבר לדשבורד', 'info');
+    emitLog('🟢 לקוח התחבר לדשבורד', 'SYSTEM', 'info');
 
     // Send current state to newly connected client
     socket.emit('wa:status', { status: waManager.status });
@@ -152,7 +152,7 @@ waManager._setStatus = function (status) {
 };
 
 async function onWhatsAppReady() {
-    emitLog('🔗 WhatsApp מחובר — בודק תור הודעות...', 'success');
+    emitLog('🔗 WhatsApp מחובר — בודק תור הודעות...', 'WHATSAPP', 'success');
     await queueService.flush(async (entry) => {
         await waManager.sendMessage(entry.chatId, entry.text, entry.media || null);
         await incrementStat('totalForwarded');
@@ -163,9 +163,9 @@ async function onWhatsAppReady() {
 /*  Helper                                                              */
 /* -------------------------------------------------------------------- */
 
-function emitLog(message, level = 'info') {
-    const entry = { timestamp: new Date().toISOString(), message, level };
-    console.log(`[Server] ${message}`);
+function emitLog(message, category = 'SYSTEM', level = 'info') {
+    const entry = { timestamp: new Date().toISOString(), message, category, level };
+    console.log(`[${category}] ${message}`);
     io.emit('log', entry);
 }
 
@@ -187,14 +187,14 @@ app.get('*', (req, res, next) => {
 });
 
 async function bootstrap() {
-    emitLog('🚀 מפעיל שרת...', 'info');
+    emitLog('🚀 מפעיל שרת...', 'SYSTEM', 'info');
 
     // 1. Load queue (fast)
     await queueService.init();
 
     // 2. Start HTTP Server immediately so UI is accessible
     httpServer.listen(PORT, () => {
-        emitLog(`🌐 שרת פועל על http://localhost:${PORT}`, 'success');
+        emitLog(`🌐 שרת פועל על http://localhost:${PORT}`, 'SYSTEM', 'success');
 
         // 3. Start heavy services in background
         startServices();
@@ -206,12 +206,12 @@ async function startServices() {
     // We don't await here to not block other potential startup logic, 
     // but these are async anyway.
     waManager.init().catch(err => {
-        emitLog(`❌ שגיאת אתחול WhatsApp: ${err.message}`, 'error');
+        emitLog(`❌ שגיאת אתחול WhatsApp: ${err.message}`, 'WHATSAPP', 'error');
     });
 
     // Start Telegram bot
     tgBridge.start().catch(err => {
-        emitLog(`❌ שגיאת הפעלת Telegram: ${err.message}`, 'error');
+        emitLog(`❌ שגיאת הפעלת Telegram: ${err.message}`, 'TELEGRAM', 'error');
     });
 }
 

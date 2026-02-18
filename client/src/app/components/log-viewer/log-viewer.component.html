@@ -19,7 +19,10 @@
 
         @for(log of socket.logs(); track $index) {
         <div class="log-line" [class]="getLogClass(log.level)">
-            <span class="log-time">{{ formatTime(log.timestamp) }}</span>
+            <span class="log-time">[{{ formatTime(log.timestamp) }}]</span>
+            <span class="category-badge" [attr.data-category]="log.category" *ngIf="log.category">
+                {{ log.category }}
+            </span>
             <span class="log-level">[{{ log.level.toUpperCase() }}]</span>
             <span class="log-msg">{{ log.message }}</span>
         </div>
