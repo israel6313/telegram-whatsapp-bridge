@@ -146,7 +146,7 @@ export class TelegramBridge {
     }
 
     async _processMediaGroup(ctxList, settings) {
-        this._log(`🚀 מעבד אלבום עם ${ctxList.length} פריטים...`, 'info');
+        this._log(`🚀 מעבד אלבום עם ${ctxList.length} פריטים (מוריד במקביל)...`, 'info');
 
         // Sort by message ID to ensure order
         ctxList.sort((a, b) => {
@@ -155,22 +155,29 @@ export class TelegramBridge {
             return msgA.message_id - msgB.message_id;
         });
 
-        for (const ctx of ctxList) {
-            await this._processSingleMessage(ctx, settings);
-            // Small delay between album items to ensure strict order in WhatsApp
-            await new Promise(r => setTimeout(r, 500));
-        }
-        this._log(`✅ אלבום נשלח בהצלחה`, 'success');
-    }
-
-    async _processSingleMessage(ctx, settings) {
         const waGroupId = settings.whatsappGroupId?.trim();
         if (!waGroupId) return;
 
-        try {
-            const payload = await this._buildPayload(ctx, settings);
-            if (!payload) return; // unsupported or filtered
+        // 1. Prepare (Download) All payloads in Parallel
+        // This ensures that we have all media ready in memory, so we can send them 
+        // as fast as possible to WhatsApp, triggering the "visual grouping".
+        const payloadPromises = ctxList.map(ctx => this._buildPayload(ctx, settings));
+        const payloads = await Promise.all(payloadPromises);
 
+        this._log(`📦 כל המדיה ירדה (${payloads.filter(Boolean).length} קבצים), שולח ל-WhatsApp...`, 'info');
+
+        // 2. Send Rapidly (Sequential but without artificial delay)
+        for (const payload of payloads) {
+            if (!payload) continue;
+            await this._dispatchPayload(waGroupId, payload);
+        }
+
+        this._log(`✅ אלבום נשלח בהצלחה`, 'success');
+    }
+
+    // New helper to handle the Send vs Queue decision
+    async _dispatchPayload(waGroupId, payload) {
+        try {
             if (this.wa.isReady) {
                 await this._sendToWhatsApp(waGroupId, payload);
                 this._log(`📤 הודעה הועברה ל-WhatsApp`, 'success');
@@ -180,6 +187,16 @@ export class TelegramBridge {
             }
         } catch (err) {
             this._log(`❌ שגיאה בהעברת הודעה: ${err.message}`, 'error');
+        }
+    }
+
+    async _processSingleMessage(ctx, settings) {
+        const waGroupId = settings.whatsappGroupId?.trim();
+        if (!waGroupId) return;
+
+        const payload = await this._buildPayload(ctx, settings);
+        if (payload) {
+            await this._dispatchPayload(waGroupId, payload);
         }
     }
 
