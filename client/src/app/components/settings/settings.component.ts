@@ -23,6 +23,8 @@ export class SettingsComponent implements OnInit {
         telegramBotToken: '',
         telegramChannelId: '',
         whatsappGroupId: '',
+        channels: [],
+        groups: [],
         footerText: '',
         autoRetry: true,
         retryIntervalMs: 5000,
@@ -37,12 +39,17 @@ export class SettingsComponent implements OnInit {
             const data = await this.settingsService.load();
             this.form.set({ ...data });
 
-            // Parse existing comma-separated IDs into arrays
-            if (data.telegramChannelId) {
+            // Load directly from arrays if available, otherwise fall back to legacy strings
+            if (data.channels && data.channels.length > 0) {
+                this.channels.set(data.channels);
+            } else if (data.telegramChannelId) {
                 const ids = data.telegramChannelId.split(',').map((s: string) => s.trim()).filter(Boolean);
                 this.channels.set(ids.map((id: string) => ({ id, name: '' })));
             }
-            if (data.whatsappGroupId) {
+
+            if (data.groups && data.groups.length > 0) {
+                this.groups.set(data.groups);
+            } else if (data.whatsappGroupId) {
                 const ids = data.whatsappGroupId.split(',').map((s: string) => s.trim()).filter(Boolean);
                 this.groups.set(ids.map((id: string) => ({ id, name: '' })));
             }
@@ -78,15 +85,15 @@ export class SettingsComponent implements OnInit {
     // ---- Save ----
     async save() {
         const current = this.form();
-        // Serialize channels/groups back to comma-separated strings
-        const channelIds = this.channels().map(c => c.id.trim()).filter(Boolean).join(',');
-        const groupIds = this.groups().map(g => g.id.trim()).filter(Boolean).join(',');
 
+        // We now send the full arrays to the backend
+        // (The backend handles migration and storage)
         const cleaned = {
             ...current,
             telegramBotToken: current.telegramBotToken?.trim(),
-            telegramChannelId: channelIds,
-            whatsappGroupId: groupIds,
+            channels: this.channels(),
+            groups: this.groups(),
+            // Legacy fields can be cleared or kept as fallback, but backend prioritizes arrays
         };
         this.form.set(cleaned);
         await this.settingsService.save(cleaned);

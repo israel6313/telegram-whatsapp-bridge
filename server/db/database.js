@@ -10,8 +10,10 @@ const DATA_DIR = join(__dirname, '..', 'data');
 const defaultData = {
     settings: {
         telegramBotToken: '',
-        telegramChannelId: '',
-        whatsappGroupId: '',
+        // Deprecated: telegramChannelId (string)
+        channels: [], // Array of { id: string, name: string }
+        // Deprecated: whatsappGroupId (string)
+        groups: [],   // Array of { id: string, name: string }
         footerText: '',
         autoRetry: true,
         retryIntervalMs: 5000,
@@ -53,12 +55,23 @@ export async function getSettings() {
     const db = await getDb();
     const s = db.data.settings;
 
+    // --- MIGRATION: Convert legacy CSV strings to Arrays if arrays are empty ---
+    if ((!s.channels || s.channels.length === 0) && s.telegramChannelId) {
+        const ids = s.telegramChannelId.split(',').map(i => i.trim()).filter(Boolean);
+        s.channels = ids.map(id => ({ id, name: '' }));
+    }
+    if ((!s.groups || s.groups.length === 0) && s.whatsappGroupId) {
+        const ids = s.whatsappGroupId.split(',').map(i => i.trim()).filter(Boolean);
+        s.groups = ids.map(id => ({ id, name: '' }));
+    }
+    // --------------------------------------------------------------------------
+
     return {
         ...s,
-        // If DB value is empty, try to use Environment Variable
+        // Environment Variable Fallback (Legacy)
+        // We might want to support ENV for channels too, but it's tricky with JSON. 
+        // For now, keep simple fallback for the main token.
         telegramBotToken: s.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN || '',
-        telegramChannelId: s.telegramChannelId || process.env.TELEGRAM_CHANNEL_ID || '',
-        whatsappGroupId: s.whatsappGroupId || process.env.WHATSAPP_GROUP_ID || '',
     };
 }
 

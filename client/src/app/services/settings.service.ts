@@ -4,8 +4,14 @@ import { firstValueFrom } from 'rxjs';
 
 export interface BridgeSettings {
     telegramBotToken: string;
-    telegramChannelId: string;
-    whatsappGroupId: string;
+    // Legacy support (optional)
+    telegramChannelId?: string;
+    whatsappGroupId?: string;
+
+    // New Structure
+    channels: { id: string; name: string }[];
+    groups: { id: string; name: string }[];
+
     footerText: string;
     autoRetry: boolean;
     retryIntervalMs: number;

@@ -90,21 +90,36 @@ export class TelegramBridge {
 
     async _handleMessage(ctx) {
         const settings = await this.getSettings();
-        // Parse configured channels (comma-separated support)
-        const channelIds = (settings.telegramChannelId || '')
-            .split(',')
-            .map(id => id.trim())
-            .filter(Boolean);
+        const _isValidSource = async (chat) => {
+            // Allow if no channels configured (open mode) ?? No, secure by default.
+            const currentSettings = await this.getSettings(); // Use this.getSettings()
 
-        const chatId = String(ctx.chat.id);
-        const chatTitle = ctx.chat.title || 'Private Chat';
+            // Support both new array structure and legacy fallback
+            const allowedChannels = currentSettings.channels || [];
+
+            // Also check legacy if array is empty (though getSettings migration should handle this)
+            if (allowedChannels.length === 0 && currentSettings.telegramChannelId) {
+                const ids = currentSettings.telegramChannelId.split(',').map(id => id.trim());
+                allowedChannels.push(...ids.map(id => ({ id })));
+            }
+
+            if (!allowedChannels.length) {
+                this._log('⚠️ לא הוגדרו ערוצי מקור ב-Telegram. מתעלם מההודעה.', 'warning');
+                return false;
+            }
+
+            const chatId = String(chat.id);
+            const isAllowed = allowedChannels.some(ch => String(ch.id) === chatId);
+
+            if (!isAllowed) {
+                this._log(`⛔ הודעה מערוץ לא מורשה (${chat.title || chat.id}) - מתעלם.`, 'warning');
+                return false;
+            }
+            return true;
+        };
 
         // Filter: only listen to the configured channels
-        if (channelIds.length > 0 && !channelIds.includes(chatId)) {
-            // Only log if it's NOT a media group part (to avoid spamming logs for every photo in an album)
-            // But we don't know if it's an album yet easily without parsing. 
-            // We'll log just once per message ID usually.
-            // this._log(`⚠️ מתעלם מהודעה: ID לא תואם (רשימה: ${channelIds.join(', ')}, התקבל: ${chatId})`, 'warning');
+        if (!(await _isValidSource(ctx.chat))) {
             return;
         }
 
@@ -155,8 +170,18 @@ export class TelegramBridge {
             return msgA.message_id - msgB.message_id;
         });
 
-        const waGroupId = settings.whatsappGroupId?.trim();
-        if (!waGroupId) return;
+
+        const groups = settings.groups || [];
+        // Legacy fallback
+        if (groups.length === 0 && settings.whatsappGroupId) {
+            const ids = settings.whatsappGroupId.split(',').map(i => i.trim()).filter(Boolean);
+            groups.push(...ids.map(id => ({ id })));
+        }
+
+        if (groups.length === 0) {
+            this._log('⚠️ לא הוגדרו קבוצות יעד (WhatsApp) לאלבום.', 'warning');
+            return;
+        }
 
         // 1. Prepare (Download) All payloads in Parallel
         // This ensures that we have all media ready in memory, so we can send them 
@@ -182,10 +207,14 @@ export class TelegramBridge {
             promiseChain = promiseChain.then(async () => {
                 // Dispatch without awaiting the full roundtrip inside the chain lock
                 // We trust wwebjs to queue them.
-                const p = this._dispatchPayload(waGroupId, payload).catch(err => {
-                    this._log(`❌ שגיאה באלבום: ${err.message}`, 'error');
+                const pPromises = groups.map(group => {
+                    return this._dispatchPayload(group.id, payload).catch(err => {
+                        this._log(`❌ שגיאה בשליחה לקבוצה ${group.id}: ${err.message}`, 'error');
+                    });
                 });
-                sendPromises.push(p);
+
+                // Add all group promises to the tracking list
+                sendPromises.push(...pPromises);
 
                 // Tiny delay to ensure the browser processes the submission order
                 await new Promise(r => setTimeout(r, 150));
@@ -216,12 +245,25 @@ export class TelegramBridge {
     }
 
     async _processSingleMessage(ctx, settings) {
-        const waGroupId = settings.whatsappGroupId?.trim();
-        if (!waGroupId) return;
-
         const payload = await this._buildPayload(ctx, settings);
-        if (payload) {
-            await this._dispatchPayload(waGroupId, payload);
+        if (!payload) return;
+
+        // Broadcast to ALL configured WhatsApp groups
+        const groups = settings.groups || [];
+        // Legacy fallback
+        if (groups.length === 0 && settings.whatsappGroupId) {
+            const ids = settings.whatsappGroupId.split(',').map(i => i.trim()).filter(Boolean);
+            groups.push(...ids.map(id => ({ id })));
+        }
+
+        if (groups.length === 0) {
+            this._log('⚠️ לא הוגדרו קבוצות יעד (WhatsApp).', 'warning');
+            return;
+        }
+
+        for (const group of groups) {
+            if (!group.id) continue;
+            await this._dispatchPayload(group.id, payload);
         }
     }
 
