@@ -1,89 +1,133 @@
-<div class="settings-panel">
-    <h2 class="panel-title">⚙️ הגדרות</h2>
+<div class="settings-page">
+    <div class="page-header">
+        <h1 class="page-title">הגדרות</h1>
+        <p class="page-subtitle">ניהול חיבורים, ערוצים וקבוצות</p>
+    </div>
 
-    <!-- Telegram Section -->
-    <section class="settings-section glass">
-        <h3 class="section-title">🤖 Telegram</h3>
+    <div class="settings-grid">
+        <!-- Telegram Bot Token -->
+        <section class="card section-card">
+            <div class="section-header">
+                <span class="section-icon tg">🤖</span>
+                <h3>Telegram Bot</h3>
+            </div>
+            <div class="section-body">
+                <div class="form-field">
+                    <label>Bot Token</label>
+                    <input type="password" class="input" placeholder="123456:ABC-DEF..."
+                        [ngModel]="form().telegramBotToken" (ngModelChange)="updateField('telegramBotToken', $event)" />
+                </div>
+                <button class="btn btn-ghost" (click)="restartBot()" [disabled]="settingsService.loading()">
+                    🔄 {{ settingsService.loading() ? 'מפעיל מחדש...' : 'הפעל מחדש את הבוט' }}
+                </button>
+            </div>
+        </section>
 
-        <div class="form-group">
-            <label for="botToken">Bot Token</label>
-            <input id="botToken" type="password" class="form-input" placeholder="123456:ABC-DEF..."
-                [ngModel]="form().telegramBotToken" (ngModelChange)="updateField('telegramBotToken', $event)" />
-        </div>
+        <!-- Telegram Channels -->
+        <section class="card section-card">
+            <div class="section-header">
+                <span class="section-icon tg">📢</span>
+                <h3>ערוצי Telegram</h3>
+                <button class="btn btn-primary btn-sm" (click)="addChannel()">+ הוסף ערוץ</button>
+            </div>
+            <div class="section-body">
+                @if (channels().length === 0) {
+                <div class="empty-list">
+                    <p>לא הוספו ערוצים עדיין</p>
+                    <button class="btn btn-ghost" (click)="addChannel()">+ הוסף ערוץ ראשון</button>
+                </div>
+                }
+                @for (ch of channels(); track $index; let i = $index) {
+                <div class="list-item">
+                    <div class="list-item-fields">
+                        <input class="input input-sm" placeholder="שם הערוץ (לא חובה)" [ngModel]="ch.name"
+                            (ngModelChange)="updateChannel(i, 'name', $event)" />
+                        <input class="input input-sm input-mono" placeholder="-1001234567890" [ngModel]="ch.id"
+                            (ngModelChange)="updateChannel(i, 'id', $event)" />
+                    </div>
+                    <button class="btn-icon btn-icon-danger" (click)="removeChannel(i)" title="הסר ערוץ">🗑️</button>
+                </div>
+                }
+            </div>
+        </section>
 
-        <div class="form-group">
-            <label for="channelId">Channel ID</label>
-            <input id="channelId" type="text" class="form-input" placeholder="-1001234567890"
-                [ngModel]="form().telegramChannelId" (ngModelChange)="updateField('telegramChannelId', $event)" />
-        </div>
+        <!-- WhatsApp Groups -->
+        <section class="card section-card">
+            <div class="section-header">
+                <span class="section-icon wa">📱</span>
+                <h3>קבוצות WhatsApp</h3>
+                <button class="btn btn-primary btn-sm" (click)="addGroup()">+ הוסף קבוצה</button>
+            </div>
+            <div class="section-body">
+                @if (groups().length === 0) {
+                <div class="empty-list">
+                    <p>לא הוספו קבוצות עדיין</p>
+                    <button class="btn btn-ghost" (click)="addGroup()">+ הוסף קבוצה ראשונה</button>
+                </div>
+                }
+                @for (gr of groups(); track $index; let i = $index) {
+                <div class="list-item">
+                    <div class="list-item-fields">
+                        <input class="input input-sm" placeholder="שם הקבוצה (לא חובה)" [ngModel]="gr.name"
+                            (ngModelChange)="updateGroup(i, 'name', $event)" />
+                        <input class="input input-sm input-mono" placeholder="120363xxx&#64;g.us" [ngModel]="gr.id"
+                            (ngModelChange)="updateGroup(i, 'id', $event)" />
+                    </div>
+                    <button class="btn-icon btn-icon-danger" (click)="removeGroup(i)" title="הסר קבוצה">🗑️</button>
+                </div>
+                }
+            </div>
 
-        <button class="btn btn-secondary" (click)="restartBot()" [disabled]="settingsService.loading()">
-            {{ settingsService.loading() ? '⏳ מפעיל מחדש...' : '🔄 הפעל מחדש את הבוט' }}
-        </button>
-    </section>
+            <div class="section-footer">
+                <button class="btn btn-danger btn-sm" (click)="hardReset()">
+                    🔨 Hard Reset (התחברות מחדש)
+                </button>
+            </div>
+        </section>
 
-    <!-- WhatsApp Section -->
-    <section class="settings-section glass">
-        <h3 class="section-title">📱 WhatsApp</h3>
+        <!-- Footer Editor -->
+        <section class="card section-card">
+            <div class="section-header">
+                <span class="section-icon edit">✏️</span>
+                <h3>טקסט תחתון (Footer)</h3>
+            </div>
+            <div class="section-body">
+                <div class="toolbar">
+                    <button class="btn-icon" (click)="insertMarkdown('bold')" title="Bold"><strong>B</strong></button>
+                    <button class="btn-icon" (click)="insertMarkdown('italic')" title="Italic"><em>I</em></button>
+                    <button class="btn-icon" (click)="insertMarkdown('strike')" title="Strikethrough"><s>S</s></button>
+                </div>
+                <textarea class="input" rows="3" placeholder="טקסט שיצורף לכל הודעה..." [ngModel]="form().footerText"
+                    (ngModelChange)="updateField('footerText', $event)"></textarea>
+                <p class="hint">השתמש ב: *bold* , _italic_ , ~strikethrough~</p>
+            </div>
+        </section>
 
-        <div class="form-group">
-            <label for="groupId">Group ID</label>
-            <input id="groupId" type="text" class="form-input" placeholder="120363xxx@g.us"
-                [ngModel]="form().whatsappGroupId" (ngModelChange)="updateField('whatsappGroupId', $event)" />
-        </div>
+        <!-- Queue Settings -->
+        <section class="card section-card">
+            <div class="section-header">
+                <span class="section-icon queue">📥</span>
+                <h3>תור הודעות</h3>
+            </div>
+            <div class="section-body">
+                <label class="toggle-label">
+                    <input type="checkbox" [ngModel]="form().autoRetry"
+                        (ngModelChange)="updateField('autoRetry', $event)" />
+                    ניסיון אוטומטי חוזר
+                </label>
+                <div class="form-field">
+                    <label>מקסימום ניסיונות</label>
+                    <input type="number" class="input input-sm input-short" [ngModel]="form().maxRetries"
+                        (ngModelChange)="updateField('maxRetries', +$event)" />
+                </div>
+            </div>
+        </section>
+    </div>
 
-        <button class="btn btn-danger" (click)="hardReset()">
-            🔨 Hard Reset (התחברות מחדש)
-        </button>
-    </section>
-
-    <!-- Footer Editor Section -->
-    <section class="settings-section glass">
-        <h3 class="section-title">✏️ טקסט תחתון (Footer)</h3>
-
-        <div class="editor-toolbar">
-            <button class="toolbar-btn" title="Bold" (click)="insertMarkdown('bold')">
-                <strong>B</strong>
-            </button>
-            <button class="toolbar-btn" title="Italic" (click)="insertMarkdown('italic')">
-                <em>I</em>
-            </button>
-            <button class="toolbar-btn" title="Strikethrough" (click)="insertMarkdown('strike')">
-                <s>S</s>
-            </button>
-        </div>
-
-        <textarea class="form-input footer-editor" rows="4" placeholder="טקסט שיצורף לכל הודעה..."
-            [ngModel]="form().footerText" (ngModelChange)="updateField('footerText', $event)"></textarea>
-        <p class="hint">השתמש ב: *bold* , _italic_ , ~strikethrough~</p>
-    </section>
-
-    <!-- Queue Settings -->
-    <section class="settings-section glass">
-        <h3 class="section-title">📥 תור הודעות</h3>
-
-        <div class="form-group inline">
-            <label>
-                <input type="checkbox" [ngModel]="form().autoRetry"
-                    (ngModelChange)="updateField('autoRetry', $event)" />
-                ניסיון אוטומטי חוזר
-            </label>
-        </div>
-
-        <div class="form-group">
-            <label for="maxRetries">מקסימום ניסיונות</label>
-            <input id="maxRetries" type="number" class="form-input short" [ngModel]="form().maxRetries"
-                (ngModelChange)="updateField('maxRetries', +$event)" />
-        </div>
-    </section>
-
-    <!-- Save -->
+    <!-- Save Bar -->
     <div class="save-bar">
-        <button class="btn btn-primary" (click)="save()" [disabled]="settingsService.loading()">
-            {{ settingsService.loading() ? '⏳ שומר...' : '💾 שמירה' }}
+        <button class="btn btn-primary btn-lg" (click)="save()" [disabled]="settingsService.loading()">
+            {{ settingsService.loading() ? '⏳ שומר...' : '💾 שמור הגדרות' }}
         </button>
-        @if(settingsService.saved()) {
-        <span class="saved-toast">✅ נשמר בהצלחה</span>
-        }
     </div>
 </div>

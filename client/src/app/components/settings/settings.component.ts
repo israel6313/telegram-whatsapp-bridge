@@ -2,6 +2,10 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SettingsService, BridgeSettings } from '../../services/settings.service';
+import { ToastService } from '../../services/toast.service';
+import { ConfirmService } from '../../services/confirm.service';
+
+interface ChannelItem { id: string; name: string; }
 
 @Component({
     selector: 'app-settings',
@@ -12,6 +16,8 @@ import { SettingsService, BridgeSettings } from '../../services/settings.service
 })
 export class SettingsComponent implements OnInit {
     readonly settingsService = inject(SettingsService);
+    readonly toast = inject(ToastService);
+    readonly confirm = inject(ConfirmService);
 
     form = signal<BridgeSettings>({
         telegramBotToken: '',
@@ -23,27 +29,71 @@ export class SettingsComponent implements OnInit {
         maxRetries: 10,
     });
 
+    channels = signal<ChannelItem[]>([]);
+    groups = signal<ChannelItem[]>([]);
+
     async ngOnInit() {
         try {
             const data = await this.settingsService.load();
             this.form.set({ ...data });
+
+            // Parse existing comma-separated IDs into arrays
+            if (data.telegramChannelId) {
+                const ids = data.telegramChannelId.split(',').map((s: string) => s.trim()).filter(Boolean);
+                this.channels.set(ids.map((id: string) => ({ id, name: '' })));
+            }
+            if (data.whatsappGroupId) {
+                const ids = data.whatsappGroupId.split(',').map((s: string) => s.trim()).filter(Boolean);
+                this.groups.set(ids.map((id: string) => ({ id, name: '' })));
+            }
         } catch { /* server may not be running */ }
     }
 
+    // ---- Channel CRUD ----
+    addChannel() {
+        this.channels.update(c => [...c, { id: '', name: '' }]);
+    }
+
+    removeChannel(index: number) {
+        this.channels.update(c => c.filter((_, i) => i !== index));
+    }
+
+    updateChannel(index: number, field: 'id' | 'name', value: string) {
+        this.channels.update(c => c.map((item, i) => i === index ? { ...item, [field]: value } : item));
+    }
+
+    // ---- Group CRUD ----
+    addGroup() {
+        this.groups.update(g => [...g, { id: '', name: '' }]);
+    }
+
+    removeGroup(index: number) {
+        this.groups.update(g => g.filter((_, i) => i !== index));
+    }
+
+    updateGroup(index: number, field: 'id' | 'name', value: string) {
+        this.groups.update(g => g.map((item, i) => i === index ? { ...item, [field]: value } : item));
+    }
+
+    // ---- Save ----
     async save() {
-        // Trim string values
         const current = this.form();
+        // Serialize channels/groups back to comma-separated strings
+        const channelIds = this.channels().map(c => c.id.trim()).filter(Boolean).join(',');
+        const groupIds = this.groups().map(g => g.id.trim()).filter(Boolean).join(',');
+
         const cleaned = {
             ...current,
             telegramBotToken: current.telegramBotToken?.trim(),
-            telegramChannelId: current.telegramChannelId?.trim(),
-            whatsappGroupId: current.whatsappGroupId?.trim(),
+            telegramChannelId: channelIds,
+            whatsappGroupId: groupIds,
         };
         this.form.set(cleaned);
         await this.settingsService.save(cleaned);
+        this.toast.success('ההגדרות נשמרו בהצלחה');
     }
 
-    /** Insert WhatsApp markdown at cursor position in footer text */
+    // ---- Footer ----
     insertMarkdown(type: 'bold' | 'italic' | 'strike') {
         const chars: Record<string, string> = { bold: '*', italic: '_', strike: '~' };
         const char = chars[type];
@@ -51,9 +101,22 @@ export class SettingsComponent implements OnInit {
         this.form.update((f) => ({ ...f, footerText: current + `${char}טקסט${char}` }));
     }
 
+    updateField(field: keyof BridgeSettings, value: any) {
+        this.form.update((f) => ({ ...f, [field]: value }));
+    }
+
+    // ---- Actions ----
     async hardReset() {
-        if (confirm('האם אתה בטוח? פעולה זו תמחק את נתוני האימות של WhatsApp.')) {
+        const confirmed = await this.confirm.confirm({
+            title: 'Hard Reset',
+            message: 'פעולה זו תמחק את נתוני האימות של WhatsApp ותדרוש סריקת QR מחדש. אתה בטוח?',
+            confirmText: 'מחק והתחבר מחדש',
+            cancelText: 'ביטול',
+            danger: true,
+        });
+        if (confirmed) {
             await this.settingsService.hardResetWa();
+            this.toast.warning('נתוני האימות נמחקו — סרוק QR מחדש');
         }
     }
 
@@ -61,16 +124,11 @@ export class SettingsComponent implements OnInit {
         this.settingsService.loading.set(true);
         try {
             await this.settingsService.restartTelegram();
-            // Toast or simple alert for now, as we don't have a full toast service yet
-            alert('✅ הבוט הופעל מחדש בהצלחה');
+            this.toast.success('הבוט הופעל מחדש בהצלחה');
         } catch (err: any) {
-            alert(`❌ שגיאה בהפעלת הבוט: ${err.message || err}`);
+            this.toast.error(`שגיאה בהפעלת הבוט: ${err.message || err}`);
         } finally {
             this.settingsService.loading.set(false);
         }
-    }
-
-    updateField(field: keyof BridgeSettings, value: any) {
-        this.form.update((f) => ({ ...f, [field]: value }));
     }
 }

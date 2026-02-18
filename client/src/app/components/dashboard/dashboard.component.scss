@@ -1,202 +1,169 @@
 .dashboard {
-    padding: 0;
     max-width: 900px;
     margin: 0 auto;
 }
 
-/* ---- Header ---- */
-.dash-header {
-    /* Like TG Chat Header */
-    background: var(--bg-secondary);
-    padding: 14px 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    border-bottom: 1px solid var(--border-color);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+/* ---- Page Header ---- */
+.page-header {
+    margin-bottom: 28px;
 }
 
-.header-content {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
 }
 
-.logo-area {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-
-    h1 {
-        font-size: 18px;
-        font-weight: 500;
-        /* TG font is usually 500 */
-        color: var(--text-primary);
-        margin: 0;
-    }
-}
-
-.connection-badge {
+.page-subtitle {
     font-size: 14px;
-    font-weight: 400;
-    color: var(--text-secondary);
-}
-
-.badge-online {
-    color: var(--accent-primary);
-}
-
-/* TG uses blue for "online" usually */
-.badge-offline {
     color: var(--text-muted);
 }
 
-/* ---- Cards List (Like Chat List or Settings Items) ---- */
-.cards-grid {
+/* ---- Stats Grid ---- */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 1px;
-    /* Divider look */
-    background: var(--bg-secondary);
-    /* Container BG */
-    margin: 20px 24px;
-    border-radius: var(--radius-md);
+    gap: 12px;
+    position: relative;
     overflow: hidden;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-.status-card {
-    background: var(--bg-secondary);
-    padding: 16px 20px;
+.stat-header {
     display: flex;
     align-items: center;
-    gap: 16px;
-    position: relative;
-    cursor: default;
-    transition: background-color .1s;
-
-    &:hover {
-        background: var(--bg-card-hover);
-    }
-
-    &:not(:last-child)::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        right: 72px;
-        /* Margin for icon */
-        left: 0;
-        height: 1px;
-        background: #000;
-        /* Darker divider */
-        opacity: 0.2;
-    }
+    gap: 10px;
 }
 
-.card-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background: var(--accent-primary);
+.stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
-    color: #fff;
+    font-size: 18px;
     flex-shrink: 0;
 
-    &.wa-icon {
-        background: #4ecc5e;
+    &.wa {
+        background: rgba(52, 211, 153, 0.12);
     }
 
-    &.queue-icon {
-        background: #f7a000;
+    &.queue {
+        background: rgba(251, 191, 36, 0.12);
     }
 
-    &.stats-icon {
-        background: #5288c1;
+    &.stats {
+        background: rgba(129, 140, 248, 0.12);
     }
 
-    &.error-icon {
-        background: #ff5e57;
-    }
-}
-
-.card-body {
-    flex: 1;
-
-    h3 {
-        font-size: 16px;
-        /* Title size */
-        font-weight: 500;
-        color: var(--text-primary);
-        margin-bottom: 2px;
+    &.error {
+        background: rgba(248, 113, 113, 0.12);
     }
 }
 
-.card-value {
-    font-size: 14px;
-    /* Subtitle size */
+.stat-label {
+    font-size: 13px;
+    font-weight: 500;
     color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* Modifiers */
-.status-ready .card-value {
-    color: var(--accent-success);
+.stat-value {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
 }
 
-.status-error .card-value {
-    color: var(--accent-error);
+.stat-number {
+    font-size: 32px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
 }
 
-.has-items .card-value {
-    color: var(--accent-primary);
+.error-count {
+    color: var(--accent-red);
 }
 
-.queue-badge {
-    background: var(--text-muted);
-    color: #fff;
-    font-size: 12px;
-    padding: 2px 10px;
-    border-radius: 12px;
-    min-width: 24px;
+.stat-badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+}
+
+.badge-green {
+    background: rgba(52, 211, 153, 0.15);
+    color: var(--accent-green);
+}
+
+.badge-amber {
+    background: rgba(251, 191, 36, 0.15);
+    color: var(--accent-amber);
+}
+
+/* Status modifiers */
+.status-ready .stat-value {
+    color: var(--accent-green);
+}
+
+.status-error .stat-value {
+    color: var(--accent-red);
+}
+
+.status-qr .stat-value {
+    color: var(--accent-purple);
+}
+
+/* ---- QR Card ---- */
+.qr-card {
+    padding: 32px;
     text-align: center;
-}
-
-.has-items .queue-badge {
-    background: var(--accent-primary);
-    /* Unread count badge color */
-}
-
-/* ---- QR Section ---- */
-.qr-section {
-    text-align: center;
-    padding: 24px;
-    margin: 0 24px 24px;
-    background: var(--bg-secondary);
-    border-radius: var(--radius-md);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 
     h2 {
-        font-size: 18px;
-        margin-bottom: 8px;
-        font-weight: 500;
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 6px;
     }
 
     .qr-hint {
-        color: var(--text-secondary);
-        font-size: 14px;
+        font-size: 13px;
+        color: var(--text-muted);
         margin-bottom: 20px;
     }
 }
 
 .qr-container {
     display: inline-block;
-    padding: 12px;
+    padding: 16px;
     background: #fff;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
+}
+
+.qr-image {
+    width: 220px;
+    height: 220px;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 600px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-number {
+        font-size: 26px;
+    }
 }

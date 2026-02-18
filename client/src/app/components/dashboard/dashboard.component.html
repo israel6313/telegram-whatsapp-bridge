@@ -1,69 +1,65 @@
 <div class="dashboard">
-  <!-- Header -->
-  <header class="dash-header glass">
-    <div class="header-content">
-      <div class="logo-area">
-        <span class="logo-icon">🔗</span>
-        <h1>TG → WA Bridge</h1>
-      </div>
-      <div class="connection-badge" [class]="socket.connected() ? 'badge-online' : 'badge-offline'">
-        <span class="badge-dot"></span>
-        {{ socket.connected() ? 'מחובר' : 'מנותק' }}
-      </div>
-    </div>
-  </header>
+  <!-- Page Title -->
+  <div class="page-header">
+    <h1 class="page-title">דשבורד</h1>
+    <p class="page-subtitle">מצב המערכת והחיבורים בזמן אמת</p>
+  </div>
 
-  <!-- Status Cards -->
-  <section class="cards-grid">
+  <!-- Stats Grid -->
+  <div class="stats-grid">
     <!-- WhatsApp Status -->
-    <div class="status-card glass" [class]="getStatusClass()">
-      <div class="card-icon wa-icon">📱</div>
-      <div class="card-body">
-        <h3>WhatsApp</h3>
-        <p class="card-value">{{ getStatusLabel() }}</p>
+    <div class="card stat-card" [class]="getStatusClass()">
+      <div class="stat-header">
+        <span class="stat-icon wa">📱</span>
+        <span class="stat-label">WhatsApp</span>
       </div>
-      <div class="card-pulse" [class.active]="socket.waStatus() === 'ready'"></div>
-    </div>
-
-    <!-- Queue Status -->
-    <div class="status-card glass" [class.has-items]="socket.queueCount() > 0">
-      <div class="card-icon queue-icon">📥</div>
-      <div class="card-body">
-        <h3>תור הודעות</h3>
-        <p class="card-value">{{ socket.queueCount() }}</p>
-      </div>
-      @if(socket.queueCount() > 0) {
-        <span class="queue-badge">{{ socket.queueCount() }} ממתינות</span>
+      <div class="stat-value">{{ getStatusLabel() }}</div>
+      @if (socket.waStatus() === 'ready') {
+      <div class="stat-badge badge-green">פעיל</div>
       }
     </div>
 
-    <!-- Stats -->
-    <div class="status-card glass">
-      <div class="card-icon stats-icon">📊</div>
-      <div class="card-body">
-        <h3>סה״כ הועברו</h3>
-        <p class="card-value">{{ stats()?.totalForwarded ?? 0 }}</p>
+    <!-- Queue -->
+    <div class="card stat-card" [class.has-items]="socket.queueCount() > 0">
+      <div class="stat-header">
+        <span class="stat-icon queue">📥</span>
+        <span class="stat-label">תור הודעות</span>
       </div>
+      <div class="stat-value stat-number">{{ socket.queueCount() }}</div>
+      @if (socket.queueCount() > 0) {
+      <div class="stat-badge badge-amber">{{ socket.queueCount() }} ממתינות</div>
+      }
+    </div>
+
+    <!-- Forwarded -->
+    <div class="card stat-card">
+      <div class="stat-header">
+        <span class="stat-icon stats">📊</span>
+        <span class="stat-label">הועברו</span>
+      </div>
+      <div class="stat-value stat-number">{{ stats()?.totalForwarded ?? 0 }}</div>
     </div>
 
     <!-- Errors -->
-    <div class="status-card glass" [class.has-errors]="(stats()?.totalErrors ?? 0) > 0">
-      <div class="card-icon error-icon">⚠️</div>
-      <div class="card-body">
-        <h3>שגיאות</h3>
-        <p class="card-value">{{ stats()?.totalErrors ?? 0 }}</p>
+    <div class="card stat-card" [class.has-errors]="(stats()?.totalErrors ?? 0) > 0">
+      <div class="stat-header">
+        <span class="stat-icon error">⚠️</span>
+        <span class="stat-label">שגיאות</span>
       </div>
+      <div class="stat-value stat-number error-count">{{ stats()?.totalErrors ?? 0 }}</div>
     </div>
-  </section>
+  </div>
 
-  <!-- QR Code Section -->
-  @if(socket.qrCode()) {
-    <section class="qr-section glass glow-border">
-      <h2>סרוק את קוד ה-QR עם WhatsApp</h2>
+  <!-- QR Code -->
+  @if (socket.qrCode()) {
+  <div class="card qr-card">
+    <div class="qr-info">
+      <h2>סריקת QR</h2>
       <p class="qr-hint">פתח WhatsApp → ⋮ → מכשירים מקושרים → קשר מכשיר</p>
-      <div class="qr-container">
-        <img [src]="socket.qrCode()!" alt="WhatsApp QR Code" class="qr-image" />
-      </div>
-    </section>
+    </div>
+    <div class="qr-container">
+      <img [src]="socket.qrCode()!" alt="QR Code" class="qr-image" />
+    </div>
+  </div>
   }
 </div>

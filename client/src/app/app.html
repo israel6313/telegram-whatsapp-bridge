@@ -1,30 +1,30 @@
 <div class="app-shell" dir="rtl">
-  <!-- Sidebar Navigation -->
-  <nav class="sidebar glass">
-    <div class="sidebar-brand">
-      <span class="brand-icon">🔗</span>
-      <span class="brand-text">TG→WA</span>
-    </div>
+  <!-- Top Navbar (Railway style) -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <!-- Brand -->
+      <a routerLink="/" class="navbar-brand">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-text">TG → WA Bridge</span>
+      </a>
 
-    <div class="nav-links">
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item">
-        <span class="nav-icon">📊</span>
-        <span class="nav-label">דשבורד</span>
-      </a>
-      <a routerLink="/settings" routerLinkActive="active" class="nav-item">
-        <span class="nav-icon">⚙️</span>
-        <span class="nav-label">הגדרות</span>
-      </a>
-      <a routerLink="/logs" routerLinkActive="active" class="nav-item">
-        <span class="nav-icon">📋</span>
-        <span class="nav-label">לוגים</span>
-      </a>
-    </div>
+      <!-- Nav Links -->
+      <div class="nav-links">
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">
+          דשבורד
+        </a>
+        <a routerLink="/settings" routerLinkActive="active" class="nav-link">
+          הגדרות
+        </a>
+        <a routerLink="/logs" routerLinkActive="active" class="nav-link">
+          לוגים
+        </a>
+      </div>
 
-    <div class="sidebar-footer">
-      <div class="server-status">
-        <span class="status-dot" [class.online]="socket.connected()"></span>
-        <span>{{ socket.connected() ? 'שרת פעיל' : 'מנותק' }}</span>
+      <!-- Status -->
+      <div class="navbar-status">
+        <span class="status-indicator" [class.online]="socket.connected()"></span>
+        <span class="status-text">{{ socket.connected() ? 'מחובר' : 'מנותק' }}</span>
       </div>
     </div>
   </nav>
@@ -33,4 +33,9 @@
   <main class="main-content">
     <router-outlet />
   </main>
+
+  <!-- Toast Container -->
+  <app-toast></app-toast>
+  <!-- Confirm Dialog -->
+  <app-confirm-dialog></app-confirm-dialog>
 </div>
