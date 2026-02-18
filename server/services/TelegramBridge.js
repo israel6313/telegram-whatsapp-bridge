@@ -24,6 +24,18 @@ export class TelegramBridge {
          * Map<groupId, { timeout: NodeJS.Timeout, messages: Array<ctx> }>
          */
         this.mediaGroupCache = new Map();
+
+        /**
+         * Recent Channels Cache (Discovery)
+         * Map<channelId, { id, name, username, lastSeen }>
+         */
+        this.recentChannels = new Map();
+    }
+
+    getRecentChannels() {
+        // Return mostly recent first
+        return Array.from(this.recentChannels.values())
+            .sort((a, b) => b.lastSeen - a.lastSeen);
     }
 
     /* ------------------------------------------------------------------ */
