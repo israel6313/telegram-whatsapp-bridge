@@ -172,4 +172,17 @@ export class WhatsAppManager {
         console.log(`[WA] ${message}`);
         if (this.io) this.io.emit('log', entry);
     }
+    async getGroups() {
+        if (!this.client || this.status !== 'ready') {
+            throw new Error('WhatsApp לא מחובר');
+        }
+
+        const chats = await this.client.getChats();
+        return chats
+            .filter(c => c.isGroup)
+            .map(c => ({
+                id: c.id._serialized,
+                name: c.name
+            }));
+    }
 }

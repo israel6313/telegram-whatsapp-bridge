@@ -159,18 +159,30 @@ export class SettingsComponent implements OnInit {
     async save() {
         const current = this.form();
 
-        // We now send the full arrays to the backend
-        // (The backend handles migration and storage)
-        const cleaned = {
+        // Construct the payload with the current values from the signals
+        const payload: BridgeSettings = {
             ...current,
             telegramBotToken: current.telegramBotToken?.trim(),
-            channels: this.channels(),
-            groups: this.groups(),
-            // Legacy fields can be cleared or kept as fallback, but backend prioritizes arrays
+            telegramChannelId: current.telegramChannelId, // Keep legacy for now if needed, or clear it
+            whatsappGroupId: current.whatsappGroupId,     // Keep legacy for now if needed, or clear it
+            channels: this.channels(), // Use the current value of the channels signal
+            groups: this.groups(),     // Use the current value of the groups signal
+            footerText: current.footerText,
+            autoRetry: current.autoRetry,
+            retryIntervalMs: current.retryIntervalMs,
+            maxRetries: current.maxRetries
         };
-        this.form.set(cleaned);
-        await this.settingsService.save(cleaned);
-        this.toast.success('ההגדרות נשמרו בהצלחה');
+
+        this.settingsService.loading.set(true);
+        try {
+            await this.settingsService.save(payload);
+            this.form.set(payload); // Update local form state
+            this.toast.success('ההגדרות נשמרו בהצלחה');
+        } catch (err: any) {
+            this.toast.error(`שגיאה בשמירה: ${err.message || err}`);
+        } finally {
+            this.settingsService.loading.set(false);
+        }
     }
 
     // ---- Footer ----
